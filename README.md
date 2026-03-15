@@ -27,6 +27,24 @@ See [dev/LEADERBOARD.md](dev/LEADERBOARD.md) for more docs on how to interpret a
 
 ## Getting started
 
+### Local Windows / RTX 4090
+
+The reference scripts in [runs/speedrun.sh](runs/speedrun.sh) are aimed at Linux on 8xH100 and are not the right starting point for a local Windows box. For a single RTX 4090 on Windows, use [runs/run4090.ps1](runs/run4090.ps1) instead. It makes three deliberate changes for local consumer hardware:
+
+- it runs the Python entrypoints directly from PowerShell instead of relying on bash
+- it avoids `--fp8`, which is intended for H100-class hardware
+- it uses `--window-pattern L`, because on non-Hopper GPUs the repo falls back away from Flash Attention 3 and alternating sliding-window attention is much less efficient
+
+Typical workflow:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\runs\run4090.ps1 -Stage setup,tokenizer,train
+powershell -ExecutionPolicy Bypass -File .\runs\run4090.ps1 -Stage sft
+powershell -ExecutionPolicy Bypass -File .\runs\run4090.ps1 -Stage chat-web
+```
+
+The default training target in this script is a smaller local experiment (`d6`), not the full GPT-2 speedrun. If you want to push further on a 4090, increase `-Depth` gradually and reduce `-DeviceBatchSize` when you hit VRAM limits.
+
 ### Reproduce and talk to GPT-2
 
 The most fun you can have is to train your own GPT-2 and talk to it. The entire pipeline to do so is contained in the single file [runs/speedrun.sh](runs/speedrun.sh), which is designed to be run on an 8XH100 GPU node. Boot up a new 8XH100 GPU box from your favorite provider (e.g. I use and like [Lambda](https://lambda.ai/service/gpu-cloud)), and kick off the training script:
